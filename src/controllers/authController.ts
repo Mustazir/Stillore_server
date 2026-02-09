@@ -38,8 +38,8 @@ export const register = asyncHandler(
 
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+      String(process.env.JWT_SECRET),
+      { expiresIn: String(process.env.JWT_EXPIRE || "7d") }
     );
 
     res.status(201).json({
@@ -87,8 +87,8 @@ export const login = asyncHandler(
 
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+      String(process.env.JWT_SECRET),
+      { expiresIn: String(process.env.JWT_EXPIRE || "7d") }
     );
 
     res.json({
@@ -110,7 +110,7 @@ export const login = asyncHandler(
 
 export const getMe = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const user = req.user!;
+    const user = req.user! as any;
 
     res.json({
       success: true,
@@ -118,11 +118,11 @@ export const getMe = asyncHandler(
         id: user._id,
         name: user.name,
         email: user.email,
-        photoURL: user.photoURL,
+        photoURL: user.photoURL || '',
         role: user.role,
-        phone: user.phone,
-        address: user.address,
-        isBlocked: user.isBlocked,
+        phone: user.phone || '',
+        address: user.address || '',
+        isBlocked: user.isBlocked || false,
       },
     });
   },
