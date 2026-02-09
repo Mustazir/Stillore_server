@@ -150,23 +150,22 @@ export const updateSlide = asyncHandler(
     }
 
     const updatedSlide = await HeroSlide.findByIdAndUpdate(
-      id,
-      {
-        title,
-        subtitle,
-        description,
-        cta,
-        link,
-        type,
-        mediaUrl,
-        videoUrl, // ✨ NEW
-        thumbnailUrl,
-        duration,
-        order,
-        isActive,
-      },
-      { new: true, runValidators: true },
-    );
+  id,
+  {
+    title,
+    subtitle,
+    description,
+    cta,
+    link,
+    type,
+    mediaUrl,
+    thumbnailUrl,
+    duration,
+    order,
+    isActive,
+  },
+  { new: true, runValidators: true },
+);
 
     res.json({
       success: true,

@@ -36,9 +36,11 @@ export const register = asyncHandler(
       isBlocked: false,
     });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_EXPIRE || "7d",
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET as string,
+      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+    );
 
     res.status(201).json({
       success: true,
@@ -83,9 +85,11 @@ export const login = asyncHandler(
       );
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_EXPIRE || "7d",
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET as string,
+      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+    );
 
     res.json({
       success: true,
