@@ -97,19 +97,20 @@ export const createSlide = asyncHandler(
       throw new ApiError(400, "Type must be either image or video");
     }
 
-const slide = await HeroSlide.create({
-  title,
-  subtitle,
-  description,
-  cta,
-  link,
-  type,
-  mediaUrl,
-  thumbnailUrl,
-  duration: duration || 5000,
-  order: order || 0,
-  isActive: isActive !== undefined ? isActive : true,
-});
+    const slide = await HeroSlide.create({
+      title,
+      subtitle,
+      description,
+      cta,
+      link,
+      type,
+      mediaUrl,
+      videoUrl, // ✨ NEW
+      thumbnailUrl,
+      duration: duration || 5000,
+      order: order || 0,
+      isActive: isActive !== undefined ? isActive : true,
+    });
 
     res.status(201).json({
       success: true,
@@ -148,23 +149,24 @@ export const updateSlide = asyncHandler(
       throw new ApiError(400, "Type must be either image or video");
     }
 
-const updatedSlide = await HeroSlide.findByIdAndUpdate(
-  id,
-  {
-    title,
-    subtitle,
-    description,
-    cta,
-    link,
-    type,
-    mediaUrl,
-    thumbnailUrl,
-    duration,
-    order,
-    isActive,
-  },
-  { new: true, runValidators: true },
-);
+    const updatedSlide = await HeroSlide.findByIdAndUpdate(
+      id,
+      {
+        title,
+        subtitle,
+        description,
+        cta,
+        link,
+        type,
+        mediaUrl,
+        videoUrl, // ✨ NEW
+        thumbnailUrl,
+        duration,
+        order,
+        isActive,
+      },
+      { new: true, runValidators: true },
+    );
 
     res.json({
       success: true,

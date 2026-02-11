@@ -5,7 +5,7 @@ import Product from "../models/Product";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AuthRequest } from "../types";
-import Order from "../models/Order";
+import Order from '../models/Order';
 
 // ========== USER REVIEW OPERATIONS ==========
 const userHasPurchasedProduct = async (
@@ -27,21 +27,21 @@ export const createReview = asyncHandler(
 
     // Validation
     if (!productId || !rating || !comment) {
-      throw new ApiError(400, "Product ID, rating, and comment are required");
+      throw new ApiError(400, 'Product ID, rating, and comment are required');
     }
 
     if (rating < 1 || rating > 5) {
-      throw new ApiError(400, "Rating must be between 1 and 5");
+      throw new ApiError(400, 'Rating must be between 1 and 5');
     }
 
     if (comment.length < 10) {
-      throw new ApiError(400, "Comment must be at least 10 characters");
+      throw new ApiError(400, 'Comment must be at least 10 characters');
     }
 
     // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
-      throw new ApiError(404, "Product not found");
+      throw new ApiError(404, 'Product not found');
     }
 
     // Check if user purchased this product
@@ -63,7 +63,7 @@ export const createReview = asyncHandler(
     });
 
     if (existingReview) {
-      throw new ApiError(400, "You have already reviewed this product");
+      throw new ApiError(400, 'You have already reviewed this product');
     }
 
     // Handle images
@@ -77,7 +77,7 @@ export const createReview = asyncHandler(
       productId,
       userId: req.user!._id,
       userName: req.user!.name,
-      userPhoto: (req.user as any).photoURL || "",
+      userPhoto: req.user!.photoURL,
       rating: Number(rating),
       comment: comment.trim(),
       images,
@@ -96,7 +96,7 @@ export const createReview = asyncHandler(
 
     res.status(201).json({
       success: true,
-      message: "Review submitted successfully",
+      message: 'Review submitted successfully',
       review,
     });
   },

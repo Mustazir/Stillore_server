@@ -1,5 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import slugify from 'slugify';
+// src/models/Category.ts - UPDATED (Backend)
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICategory extends Document {
   name: string;
@@ -7,43 +7,53 @@ export interface ICategory extends Document {
   slug: string;
   description?: string;
   image?: string;
+  type: 'category' | 'customization'; // ✨ NEW FIELD
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const categorySchema = new Schema<ICategory>(
+const CategorySchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'Category name is required'],
       unique: true,
-      trim: true
+      trim: true,
     },
     code: {
       type: String,
-      required: true,
+      required: [true, 'Category code is required'],
       unique: true,
       uppercase: true,
       trim: true,
-      maxlength: 5
     },
-    slug: { type: String, unique: true },
-    description: { type: String },
-    image: { type: String },
-    isActive: { type: Boolean, default: true }
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    description: {
+      type: String,
+      maxlength: [500, 'Description cannot exceed 500 characters'],
+    },
+    image: {
+      type: String,
+    },
+    type: { // ✨ NEW FIELD
+      type: String,
+      enum: ['category', 'customization'],
+      default: 'category',
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-categorySchema.pre('save', function(next) {
-  if (this.isModified('name')) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
-  }
-
-});
-
-categorySchema.index({ slug: 1 });
-categorySchema.index({ isActive: 1 });
-
-export default mongoose.model<ICategory>('Category', categorySchema);
+export default mongoose.model<ICategory>('Category', CategorySchema);

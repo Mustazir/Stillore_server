@@ -1,3 +1,4 @@
+// src/utils/validators.ts - UPDATE categorySchema
 import Joi from 'joi';
 
 export const registerSchema = Joi.object({
@@ -34,6 +35,7 @@ export const categorySchema = Joi.object({
   code: Joi.string().min(1).max(5).uppercase().required(),
   description: Joi.string().max(500).optional().allow(''),
   image: Joi.string().uri().optional().allow(''),
+  type: Joi.string().valid('category', 'customization').optional(), // ✨ ADD THIS
   imageFile: Joi.any().optional(),
   isActive: Joi.boolean().optional()
 }).unknown(true);

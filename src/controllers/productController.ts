@@ -69,6 +69,9 @@ export const createProduct = asyncHandler(
   },
 );
 
+// src/controllers/productController.ts - UPDATED (Backend)
+// Find the getProducts function and update the filter logic
+
 export const getProducts = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
@@ -80,36 +83,46 @@ export const getProducts = asyncHandler(
       minPrice,
       maxPrice,
       size,
-      isOffer,
+      isOffer, // ✨ Will be 'true' or 'false' as string
+      inStock,
       status,
+      sort = '-createdAt',
       search,
-      sort = "-createdAt",
     } = req.query;
 
     const query: any = {};
 
-    // ✅ Add search functionality
-    if (search) {
-      query.$or = [
-        { title: new RegExp(search as string, 'i') },
-        { serial: new RegExp(search as string, 'i') }
-      ];
-    }
-
     if (category) query.category = category;
     if (gender) query.gender = gender;
     if (season) query.season = season;
-    if (isOffer !== undefined) query.isOffer = isOffer === "true";
-    if (status) query.status = status;
+    if (size) query.sizes = size;
 
+    // ✨ FIXED - Handle isOffer filter properly
+  if (isOffer === 'true') {
+  query.isOffer = true;
+}
+    // If isOffer is undefined or empty string, don't add it to query
+
+    // In Stock filter
+    if (inStock === 'true') {
+      query.status = 'Available';
+      query.stock = { $gt: 0 };
+    } else if (status) {
+      query.status = status;
+    }
+ 
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    if (size) {
-      query.sizes = { $in: [size] };
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { serial: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search as string, 'i')] } },
+      ];
     }
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -123,25 +136,9 @@ export const getProducts = asyncHandler(
       Product.countDocuments(query),
     ]);
 
-    const productsWithCategory = await Promise.all(
-      products.map(async (product) => {
-        const category = await Category.findOne({ name: product.category });
-        return {
-          ...product,
-          categoryDetails: category
-            ? {
-                _id: category._id,
-                name: category.name,
-                slug: category.slug,
-              }
-            : null,
-        };
-      }),
-    );
-
     res.json({
       success: true,
-      products: productsWithCategory,
+      products,
       pagination: {
         total,
         page: Number(page),
@@ -149,7 +146,7 @@ export const getProducts = asyncHandler(
         limit: Number(limit),
       },
     });
-  },
+  }
 );
 
 export const searchProducts = asyncHandler(

@@ -11,9 +11,7 @@ export const checkBlocked = (
     throw new ApiError(401, 'Authentication required');
   }
 
-  const user = req.user as any;
-
-  if (user.isBlocked) {
+  if (req.user.isBlocked) {
     throw new ApiError(403, 'Your account has been blocked. Contact support.');
   }
 
