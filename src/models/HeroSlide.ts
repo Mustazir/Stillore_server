@@ -1,5 +1,4 @@
-
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IHeroSlide extends Document {
   title: string;
@@ -7,7 +6,7 @@ export interface IHeroSlide extends Document {
   description: string;
   cta: string;
   link: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
   mediaUrl: string; // Image or video URL
   thumbnailUrl?: string; // Thumbnail for video
   duration?: number; // Duration in milliseconds for images (videos use actual video duration)
@@ -17,47 +16,49 @@ export interface IHeroSlide extends Document {
   updatedAt: Date;
 }
 
+
 const HeroSlideSchema: Schema = new Schema(
   {
     title: {
       type: String,
-      required: [true, 'Title is required'],
+      required: [true, "Title is required"],
       trim: true,
-      maxlength: [100, 'Title cannot exceed 100 characters'],
+      maxlength: [100, "Title cannot exceed 100 characters"],
     },
     subtitle: {
       type: String,
-      required: [true, 'Subtitle is required'],
+      required: [true, "Subtitle is required"],
       trim: true,
-      maxlength: [100, 'Subtitle cannot exceed 100 characters'],
+      maxlength: [100, "Subtitle cannot exceed 100 characters"],
     },
     description: {
       type: String,
-      required: [true, 'Description is required'],
+      required: [true, "Description is required"],
       trim: true,
-      maxlength: [500, 'Description cannot exceed 500 characters'],
+      maxlength: [500, "Description cannot exceed 500 characters"],
     },
     cta: {
       type: String,
-      required: [true, 'CTA text is required'],
+      required: [true, "CTA text is required"],
       trim: true,
-      maxlength: [50, 'CTA cannot exceed 50 characters'],
+      maxlength: [50, "CTA cannot exceed 50 characters"],
     },
     link: {
       type: String,
-      required: [true, 'Link is required'],
+      required: [true, "Link is required"],
       trim: true,
     },
     type: {
       type: String,
-      enum: ['image', 'video'],
-      required: [true, 'Type is required'],
+      enum: ["image", "video"],
+      required: [true, "Type is required"],
     },
     mediaUrl: {
       type: String,
-      required: [true, 'Media URL is required'],
+      required: [true, "Media URL is required"],
     },
-    videoUrl: {  // ✨ NEW FIELD - For the small preview video
+    videoUrl: {
+      // ← Make sure this exists
       type: String,
       default: null,
     },
@@ -70,7 +71,7 @@ const HeroSlideSchema: Schema = new Schema(
     },
     order: {
       type: Number,
-      required: [true, 'Order is required'],
+      required: [true, "Order is required"],
       default: 0,
     },
     isActive: {
@@ -80,7 +81,7 @@ const HeroSlideSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export default mongoose.model<IHeroSlide>('HeroSlide', HeroSlideSchema);
+export default mongoose.model<IHeroSlide>("HeroSlide", HeroSlideSchema);

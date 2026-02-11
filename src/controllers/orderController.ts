@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
-import Order from '../models/Order';
-import Product from '../models/Product';
-import { ApiError } from '../utils/ApiError';
-import { asyncHandler } from '../utils/asyncHandler';
-import { AuthRequest } from '../types';
-import { orderSchema } from '../utils/validators';
-import { generateWhatsAppOrderLink } from '../services/whatsappService';
+import { Request, Response, NextFunction } from "express";
+import Order from "../models/Order";
+import Product from "../models/Product";
+import { ApiError } from "../utils/ApiError";
+import { asyncHandler } from "../utils/asyncHandler";
+import { AuthRequest } from "../types";
+import { orderSchema } from "../utils/validators";
+import { generateWhatsAppOrderLink } from "../services/whatsappService";
 
 export const createOrder = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -23,12 +23,15 @@ export const createOrder = asyncHandler(
         throw new ApiError(404, `Product ${item.title} not found`);
       }
 
-      if (product.status === 'Out of Stock') {
+      if (product.status === "Out of Stock") {
         throw new ApiError(400, `Product ${product.title} is out of stock`);
       }
 
       if (product.stock < item.quantity) {
-        throw new ApiError(400, `Insufficient stock for ${product.title}. Available: ${product.stock}`);
+        throw new ApiError(
+          400,
+          `Insufficient stock for ${product.title}. Available: ${product.stock}`,
+        );
       }
     }
 
@@ -38,38 +41,37 @@ export const createOrder = asyncHandler(
       totalPrice,
       address,
       phone,
-      status: 'Pending'
+      status: "Pending",
     });
 
     const whatsappLink = generateWhatsAppOrderLink({
-      products: products.map(p => ({
+      products: products.map((p: any) => ({
         title: p.title,
         size: p.size,
         quantity: p.quantity,
-        price: p.price
+        price: p.price,
       })),
       totalPrice,
       customerName: req.user!.name,
       address,
-      phone
+      phone,
     });
 
     order.whatsappLink = whatsappLink;
     await order.save();
 
     for (const item of products) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        { $inc: { stock: -item.quantity } }
-      );
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity },
+      });
     }
 
     res.status(201).json({
       success: true,
       order,
-      whatsappLink
+      whatsappLink,
     });
-  }
+  },
 );
 
 export const getMyOrders = asyncHandler(
@@ -84,7 +86,7 @@ export const getMyOrders = asyncHandler(
         .skip(skip)
         .limit(Number(limit))
         .lean(),
-      Order.countDocuments({ userId: req.user!._id })
+      Order.countDocuments({ userId: req.user!._id }),
     ]);
 
     res.json({
@@ -93,10 +95,10 @@ export const getMyOrders = asyncHandler(
       pagination: {
         total,
         page: Number(page),
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-  }
+  },
 );
 
 export const getAllOrders = asyncHandler(
@@ -110,12 +112,12 @@ export const getAllOrders = asyncHandler(
 
     const [orders, total] = await Promise.all([
       Order.find(query)
-        .populate('userId', 'name email phone')
+        .populate("userId", "name email phone")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
         .lean(),
-      Order.countDocuments(query)
+      Order.countDocuments(query),
     ]);
 
     res.json({
@@ -124,51 +126,59 @@ export const getAllOrders = asyncHandler(
       pagination: {
         total,
         page: Number(page),
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-  }
+  },
 );
 
 export const getOrder = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const order = await Order.findById(req.params.id).populate('userId', 'name email phone');
+    const order = await Order.findById(req.params.id).populate(
+      "userId",
+      "name email phone",
+    );
 
     if (!order) {
-      throw new ApiError(404, 'Order not found');
+      throw new ApiError(404, "Order not found");
     }
 
-    if (order.userId._id.toString() !== req.user!._id.toString() && req.user!.role !== 'admin') {
-      throw new ApiError(403, 'Not authorized to view this order');
+    if (
+      order.userId._id.toString() !== req.user!._id.toString() &&
+      req.user!.role !== "admin"
+    ) {
+      throw new ApiError(403, "Not authorized to view this order");
     }
 
     res.json({
       success: true,
-      order
+      order,
     });
-  }
+  },
 );
 
 export const updateOrderStatus = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { status } = req.body;
 
-    if (!['Pending', 'Delivered', 'Cancelled'].includes(status)) {
-      throw new ApiError(400, 'Invalid status. Allowed: Pending, Delivered, Cancelled');
+    if (!["Pending", "Delivered", "Cancelled"].includes(status)) {
+      throw new ApiError(
+        400,
+        "Invalid status. Allowed: Pending, Delivered, Cancelled",
+      );
     }
 
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      throw new ApiError(404, 'Order not found');
+      throw new ApiError(404, "Order not found");
     }
 
-    if (status === 'Cancelled' && order.status !== 'Cancelled') {
+    if (status === "Cancelled" && order.status !== "Cancelled") {
       for (const item of order.products) {
-        await Product.findByIdAndUpdate(
-          item.productId,
-          { $inc: { stock: item.quantity } }
-        );
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: item.quantity },
+        });
       }
     }
 
@@ -177,47 +187,46 @@ export const updateOrderStatus = asyncHandler(
 
     res.json({
       success: true,
-      order
+      order,
     });
-  }
+  },
 );
 export const cancelOrder = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      throw new ApiError(404, 'Order not found');
+      throw new ApiError(404, "Order not found");
     }
 
     // Check if user owns this order
     if (order.userId.toString() !== req.user!._id.toString()) {
-      throw new ApiError(403, 'Not authorized to cancel this order');
+      throw new ApiError(403, "Not authorized to cancel this order");
     }
 
     // Check if order is already delivered or cancelled
-    if (order.status === 'Delivered') {
-      throw new ApiError(400, 'Cannot cancel a delivered order');
+    if (order.status === "Delivered") {
+      throw new ApiError(400, "Cannot cancel a delivered order");
     }
 
-    if (order.status === 'Cancelled') {
-      throw new ApiError(400, 'Order is already cancelled');
+    if (order.status === "Cancelled") {
+      throw new ApiError(400, "Order is already cancelled");
     }
 
     // Restore product stock
     for (const item of order.products) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        { $inc: { stock: item.quantity } }
-      );
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: item.quantity },
+      });
     }
 
-    order.status = 'Cancelled';
+    order.status = "Cancelled";
     await order.save();
 
     res.json({
       success: true,
       order,
-      message: 'Order cancelled successfully'
+      message: "Order cancelled successfully",
     });
-  }
+  },
 );

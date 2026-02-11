@@ -105,12 +105,12 @@ export const createSlide = asyncHandler(
       link,
       type,
       mediaUrl,
-      videoUrl, // ✨ NEW
+      videoUrl,
       thumbnailUrl,
       duration: duration || 5000,
       order: order || 0,
       isActive: isActive !== undefined ? isActive : true,
-    });
+    } as any);
 
     res.status(201).json({
       success: true,
@@ -149,21 +149,22 @@ export const updateSlide = asyncHandler(
       throw new ApiError(400, "Type must be either image or video");
     }
 
+    // In updateSlide function, change the update object to:
     const updatedSlide = await HeroSlide.findByIdAndUpdate(
       id,
       {
-        title,
-        subtitle,
-        description,
-        cta,
-        link,
-        type,
-        mediaUrl,
-        videoUrl, // ✨ NEW
-        thumbnailUrl,
-        duration,
-        order,
-        isActive,
+        ...(title && { title }),
+        ...(subtitle && { subtitle }),
+        ...(description && { description }),
+        ...(cta && { cta }),
+        ...(link && { link }),
+        ...(type && { type }),
+        ...(mediaUrl && { mediaUrl }),
+        ...(videoUrl !== undefined && { videoUrl }),
+        ...(thumbnailUrl && { thumbnailUrl }),
+        ...(duration && { duration }),
+        ...(order !== undefined && { order }),
+        ...(isActive !== undefined && { isActive }),
       },
       { new: true, runValidators: true },
     );

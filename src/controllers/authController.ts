@@ -36,9 +36,11 @@ export const register = asyncHandler(
       isBlocked: false,
     });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_EXPIRE || "7d",
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || "fallback-secret",
+      { expiresIn: "7d" },
+    );
 
     res.status(201).json({
       success: true,
@@ -83,9 +85,11 @@ export const login = asyncHandler(
       );
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_EXPIRE || "7d",
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || "fallback-secret",
+      { expiresIn: "7d" },
+    );
 
     res.json({
       success: true,
@@ -104,9 +108,13 @@ export const login = asyncHandler(
   },
 );
 
+// Replace the getMe function (around line 107):
 export const getMe = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const user = req.user!;
+
+    // Type guard to check if it's a User (not Admin)
+    const isUser = 'photoURL' in user;
 
     res.json({
       success: true,
@@ -114,11 +122,11 @@ export const getMe = asyncHandler(
         id: user._id,
         name: user.name,
         email: user.email,
-        photoURL: user.photoURL,
+        photoURL: isUser ? user.photoURL : undefined,
         role: user.role,
-        phone: user.phone,
-        address: user.address,
-        isBlocked: user.isBlocked,
+        phone: isUser ? user.phone : undefined,
+        address: isUser ? user.address : undefined,
+        isBlocked: isUser ? user.isBlocked : undefined,
       },
     });
   },
