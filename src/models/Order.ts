@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOrder extends Document {
   userId: mongoose.Types.ObjectId;
+  orderNumber: string; // ✨ ADD THIS FIELD
   products: {
     productId: mongoose.Types.ObjectId;
     title: string;
@@ -19,12 +20,26 @@ export interface IOrder extends Document {
   updatedAt: Date;
 }
 
+// ✨ Helper function to generate order number
+const generateOrderNumber = (): string => {
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `ORD-${timestamp}${random}`;
+};
+
 const orderSchema = new Schema<IOrder>(
   {
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true
+    },
+    orderNumber: {  // ✨ ADD THIS FIELD TO SCHEMA
+      type: String,
+      unique: true,
+      default: function() {
+        return generateOrderNumber();
+      }
     },
     products: [
       {
@@ -56,5 +71,6 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ userId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ orderNumber: 1 }); // ✨ ADD INDEX
 
 export default mongoose.model<IOrder>('Order', orderSchema);

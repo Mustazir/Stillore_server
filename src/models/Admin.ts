@@ -6,6 +6,7 @@ export interface IAdmin extends Document {
   password: string;
   name: string;
   role: 'admin';
+  fcmTokens: string[];
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -33,6 +34,10 @@ const adminSchema = new Schema<IAdmin>(
       type: String,
       default: 'admin',
       immutable: true
+    },
+    fcmTokens: {
+      type: [String],
+      default: []
     }
   },
   {
@@ -41,13 +46,11 @@ const adminSchema = new Schema<IAdmin>(
 );
 
 // Hash password before saving
-adminSchema.pre('save', async function (next) {
+adminSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return ;
+    return;
   }
-
   this.password = await bcrypt.hash(this.password, 12);
-  
 });
 
 // Compare password method

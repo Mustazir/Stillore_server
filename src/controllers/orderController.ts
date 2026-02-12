@@ -6,6 +6,10 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AuthRequest } from "../types";
 import { orderSchema } from "../utils/validators";
 import { generateWhatsAppOrderLink } from "../services/whatsappService";
+import { Admin } from '../models/Admin';
+import { sendOrderNotification } from '../services/fcmService';
+
+
 
 export const createOrder = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -16,11 +20,19 @@ export const createOrder = asyncHandler(
 
     const { products, totalPrice, address, phone } = value;
 
+    // Validate products
     for (const item of products) {
-      const product = await Product.findById(item.productId);
+      // Skip validation if productId is not provided (edge case)
+      if (!item.productId) continue;
+
+      const product = await Product.findById(item.productId).catch(() => null);
 
       if (!product) {
-        throw new ApiError(404, `Product ${item.title} not found`);
+        console.log(
+          `⚠️ Product not found: ${item.productId}, Title: ${item.title}`,
+        );
+        // Don't throw error, just skip stock validation for this product
+        continue;
       }
 
       if (product.status === "Out of Stock") {
@@ -61,9 +73,49 @@ export const createOrder = asyncHandler(
     await order.save();
 
     for (const item of products) {
+      if (!item.productId) continue;
+
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: -item.quantity },
+      }).catch((err) => {
+        console.log(
+          `⚠️ Could not update stock for product ${item.productId}: ${err.message}`,
+        );
       });
+    }
+
+    // ✨ Send real-time notification to all admins
+    // ✨ Send real-time notification to all admins
+    const io = req.app.get("io");
+    if (io) {
+      io.to("admins").emit("new:order", {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        customerName: req.user!.name,
+        totalPrice: order.totalPrice,
+        itemCount: order.products.length,
+        createdAt: order.createdAt,
+        message: `New order received from ${req.user!.name}!`,
+      });
+      console.log("📢 Socket notification sent to admins");
+    }
+
+    // ✨ Send FCM push notification to all admins
+    try {
+      const admins = await Admin.find({ role: "admin" });
+      const allTokens = admins.flatMap((admin) => admin.fcmTokens || []);
+
+      if (allTokens.length > 0) {
+        await sendOrderNotification(allTokens, {
+          orderNumber: order.orderNumber,
+          customerName: req.user!.name,
+          totalPrice: order.totalPrice,
+          orderId: order._id.toString(),
+        });
+        console.log("📲 FCM notification sent to admins");
+      }
+    } catch (fcmError: any) {
+      console.error("FCM Error:", fcmError.message);
     }
 
     res.status(201).json({
@@ -191,6 +243,7 @@ export const updateOrderStatus = asyncHandler(
     });
   },
 );
+
 export const cancelOrder = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const order = await Order.findById(req.params.id);

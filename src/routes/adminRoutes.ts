@@ -4,6 +4,8 @@ import {
   loginAdmin,
   getAdminProfile,
   changePassword,
+  saveFcmToken,
+  removeFcmToken,
 } from "../controllers/adminController";
 import {
   getAllUsers,
@@ -32,6 +34,12 @@ router.use(requireAdmin);
 // Admin Profile Management
 router.get("/profile", getAdminProfile);
 router.put("/change-password", changePassword);
+
+
+// ✨ FCM Token Management
+router.post("/fcm-token", saveFcmToken);
+router.delete("/fcm-token", removeFcmToken);
+
 
 // ========== USER MANAGEMENT ==========
 router.get('/users', getAllUsers);

@@ -131,3 +131,55 @@ export const getAdminProfile = asyncHandler(
     });
   },
 );
+
+// ========== FCM TOKEN MANAGEMENT ==========
+export const saveFcmToken = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { token } = req.body;
+
+    if (!token) {
+      throw new ApiError(400, 'FCM token is required');
+    }
+
+    const admin = await Admin.findById(req.user!._id);
+
+    if (!admin) {
+      throw new ApiError(404, 'Admin not found');
+    }
+
+    // Add token if not already exists
+    if (!admin.fcmTokens.includes(token)) {
+      admin.fcmTokens.push(token);
+      await admin.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'FCM token saved successfully',
+    });
+  }
+);
+
+export const removeFcmToken = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { token } = req.body;
+
+    if (!token) {
+      throw new ApiError(400, 'FCM token is required');
+    }
+
+    const admin = await Admin.findById(req.user!._id);
+
+    if (!admin) {
+      throw new ApiError(404, 'Admin not found');
+    }
+
+    admin.fcmTokens = admin.fcmTokens.filter((t) => t !== token);
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: 'FCM token removed successfully',
+    });
+  }
+);
