@@ -21,6 +21,9 @@ import adminRoutes from './routes/adminRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import dynamicLinkRoutes from './routes/dynamicLinkRoutes';
 import heroSlideRoutes from './routes/heroSlideRoutes';
+import offerBannerRoutes from './routes/offerBannerRoutes';
+import countdownTimerRoutes from './routes/countdownTimerRoutes';
+
 
 dotenv.config();
 
@@ -113,6 +116,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/dynamic-links', dynamicLinkRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/offer-banners', offerBannerRoutes);
+app.use('/api/countdown-timers', countdownTimerRoutes);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({

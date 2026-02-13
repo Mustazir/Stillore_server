@@ -13,59 +13,64 @@ const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
 };
 
-export const createCategory = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { error } = categorySchema.validate(req.body);
-  if (error) throw new ApiError(400, error.details[0].message);
+export const createCategory = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { error } = categorySchema.validate(req.body);
+    if (error) throw new ApiError(400, error.details[0].message);
 
-  // ✨ Auto-generate slug from name
-  const slug = generateSlug(req.body.name);
+    // ✨ Auto-generate slug from name
+    const slug = generateSlug(req.body.name);
 
-  // Check if category with same name, code, or slug already exists
-  const existingCategory = await Category.findOne({
-    $or: [
-      { name: req.body.name },
-      { code: req.body.code.toUpperCase() },
-      { slug }
-    ],
-  });
+    // Check if category with same name, code, or slug already exists
+    const existingCategory = await Category.findOne({
+      $or: [
+        { name: req.body.name },
+        { code: req.body.code.toUpperCase() },
+        { slug },
+      ],
+    });
 
-  if (existingCategory) {
-    if (existingCategory.name === req.body.name) {
-      throw new ApiError(400, 'Category with this name already exists');
+    if (existingCategory) {
+      if (existingCategory.name === req.body.name) {
+        throw new ApiError(400, "Category with this name already exists");
+      }
+      if (existingCategory.code === req.body.code.toUpperCase()) {
+        throw new ApiError(400, "Category with this code already exists");
+      }
+      if (existingCategory.slug === slug) {
+        throw new ApiError(400, "Category with this slug already exists");
+      }
     }
-    if (existingCategory.code === req.body.code.toUpperCase()) {
-      throw new ApiError(400, 'Category with this code already exists');
-    }
-    if (existingCategory.slug === slug) {
-      throw new ApiError(400, 'Category with this slug already exists');
-    }
-  }
 
-  const category = await Category.create({
-    name: req.body.name,
-    code: req.body.code.toUpperCase(),
-    slug, // ✨ Add generated slug
-    description: req.body.description || "",
-    type: req.body.type || 'category', // ✨ Add type field
-    isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-    image: req.body.image || "",
-  });
+    const category = await Category.create({
+      name: req.body.name,
+      code: req.body.code.toUpperCase(),
+      slug, // ✨ Add generated slug
+      description: req.body.description || "",
+      type: req.body.type || "category", // ✨ Add type field
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+      image: req.body.image || "",
+    });
 
-  res.status(201).json({ success: true, category });
-});
+    res.status(201).json({ success: true, category });
+  },
+);
 
 export const getCategories = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { isActive } = req.query;
 
     const query: any = {};
+
     if (isActive !== undefined) {
       query.isActive = isActive === "true";
+    } else {
+      query.isActive = true;
     }
 
     const categories = await Category.find(query).sort({ name: 1 });
@@ -123,10 +128,10 @@ export const updateCategory = asyncHandler(
       // Check if new slug already exists
       const existingCategory = await Category.findOne({
         slug,
-        _id: { $ne: req.params.id }
+        _id: { $ne: req.params.id },
       });
       if (existingCategory) {
-        throw new ApiError(400, 'Category with this name already exists');
+        throw new ApiError(400, "Category with this name already exists");
       }
     }
 
@@ -137,7 +142,7 @@ export const updateCategory = asyncHandler(
         _id: { $ne: req.params.id },
       });
       if (existingCategory) {
-        throw new ApiError(400, 'Category with this code already exists');
+        throw new ApiError(400, "Category with this code already exists");
       }
     }
 
@@ -151,7 +156,10 @@ export const updateCategory = asyncHandler(
         slug, // ✨ Update slug
         description: req.body.description || "",
         type: req.body.type || category.type, // ✨ Update type
-        isActive: req.body.isActive !== undefined ? req.body.isActive : category.isActive,
+        isActive:
+          req.body.isActive !== undefined
+            ? req.body.isActive
+            : category.isActive,
         image: imageUrl,
       },
       { new: true, runValidators: true },
